@@ -526,8 +526,8 @@ class View final {
                 for(; pos && unchecked[pos-1]->fast(entity); --pos);
 
                 if(!pos) {
-                    // avoided indirections due to the sparse set for the pivot
-                    func(entity, get<Comp, Component>(raw, entity)...);
+                    // avoided indirections due to the sparse set for the pivot (this-> required because of GCC 6)
+                    func(entity, this->get<Comp, Component>(raw, entity)...);
                 }
             }
         });
