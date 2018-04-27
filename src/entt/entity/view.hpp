@@ -505,11 +505,11 @@ class View final {
     }
 
     template<typename Comp, typename Other, typename It>
-    std::enable_if_t<std::is_same<Comp, Other>::value, const Other &>
+    inline std::enable_if_t<std::is_same<Comp, Other>::value, const Other &>
     get(It &it, Entity) const { return *(it++); }
 
     template<typename Comp, typename Other, typename It>
-    std::enable_if_t<!std::is_same<Comp, Other>::value, const Other &>
+    inline std::enable_if_t<!std::is_same<Comp, Other>::value, const Other &>
     get(const It &, Entity entity) const { return std::get<pool_type<Other> &>(pools).get(entity); }
 
     template<typename Comp, typename Func>
