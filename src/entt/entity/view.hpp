@@ -541,7 +541,7 @@ class View final {
 
                 if(!pos) {
                     // avoided indirections due to the sparse set for the pivot
-                    func(entity, std::get<pool_type<Pre> &>(pools).get(entity)..., *(raw)++, std::get<pool_type<Post> &>(pools).get(entity)...);
+                    func(entity, get<Pre>(entity)..., *(raw)++, get<Post>(entity)...);
                 }
             }
         });
