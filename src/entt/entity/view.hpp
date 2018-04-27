@@ -429,28 +429,6 @@ class View final {
     using pattern_type = std::tuple<pool_type<Component> &...>;
     using traits_type = entt_traits<Entity>;
 
-    template<typename...>
-    struct ComponentList {};
-
-    template<typename, typename, typename = ComponentList<>, typename = void>
-    struct SplitComponentListBy;
-
-    template<typename Comp, typename Next, typename... Other, typename... Types>
-    struct SplitComponentListBy<Comp, ComponentList<Next, Other...>, ComponentList<Types...>, std::enable_if_t<std::is_same<Comp, Next>::value>> {
-        using pre_type = ComponentList<Types...>;
-        using post_type = ComponentList<Other...>;
-    };
-
-    template<typename Comp, typename Next, typename... Other, typename... Types>
-    struct SplitComponentListBy<Comp, ComponentList<Next, Other...>, ComponentList<Types...>, std::enable_if_t<!std::is_same<Comp, Next>::value>>
-            : SplitComponentListBy<Comp, ComponentList<Other...>, ComponentList<Types..., Next>> {};
-
-    template<typename Comp>
-    using PreList = typename SplitComponentListBy<Comp, ComponentList<Component...>>::pre_type;
-
-    template<typename Comp>
-    using PostList = typename SplitComponentListBy<Comp, ComponentList<Component...>>::post_type;
-
     class Iterator {
         using size_type = typename view_type::size_type;
 
@@ -526,8 +504,16 @@ class View final {
         reset();
     }
 
-    template<typename Comp, typename... Pre, typename... Post, typename Func>
-    void each(Func func, ComponentList<Pre...>, ComponentList<Post...>) const {
+    template<typename Comp, typename Other, typename It>
+    std::enable_if_t<std::is_same<Comp, Other>::value, const Other &>
+    get(It &it, Entity) const { return *(it++); }
+
+    template<typename Comp, typename Other, typename It>
+    std::enable_if_t<!std::is_same<Comp, Other>::value, const Other &>
+    get(const It &, Entity entity) const { return std::get<pool_type<Other> &>(pools).get(entity); }
+
+    template<typename Comp, typename Func>
+    void each(Func func) const {
         const auto extent = std::min({ std::get<pool_type<Component> &>(pools).extent()... });
         auto &pool = std::get<pool_type<Comp> &>(pools);
 
@@ -541,7 +527,7 @@ class View final {
 
                 if(!pos) {
                     // avoided indirections due to the sparse set for the pivot
-                    func(entity, get<Pre>(entity)..., *(raw)++, get<Post>(entity)...);
+                    func(entity, get<Comp, Component>(raw, entity)...);
                 }
             }
         });
@@ -779,7 +765,7 @@ public:
     inline void each(Func func) const {
         constexpr auto indexes = ident<Component...>;
         using accumulator_type = int[];
-        accumulator_type accumulator = { (indexes.template get<Component>() == idx ? (each<Component>(std::move(func), PreList<Component>{}, PostList<Component>{}), 0) : 0)... };
+        accumulator_type accumulator = { (indexes.template get<Component>() == idx ? (each<Component>(std::move(func)), 0) : 0)... };
         (void)accumulator;
     }
 
