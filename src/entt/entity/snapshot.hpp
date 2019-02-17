@@ -480,12 +480,14 @@ public:
      * @return A non-const reference to this loader.
      */
     template<typename... Component, typename Archive, typename... Type, typename... Member>
-    basic_continuous_loader & component(Archive &archive, Member Type:: *... member) {
+    basic_continuous_loader & component(bool keepOld, Archive &archive, Member Type:: *... member) {
         auto apply = [this](const auto entt, const auto &component) {
             reg.template assign_or_replace<std::decay_t<decltype(component)>>(entt, component);
         };
 
-        (reset<Component>(), ...);
+        if(!keepOld){
+            (reset<Component>(), ...);
+        }
         (assign<Component>(archive, apply, member...), ...);
         return *this;
     }
