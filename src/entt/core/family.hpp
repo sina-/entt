@@ -21,7 +21,7 @@ class family {
     inline static maybe_atomic_t<ENTT_ID_TYPE> identifier;
 
     template<typename...>
-    inline static const auto inner = identifier++;
+    inline static const ENTT_ID_TYPE inner = identifier++;
 
 public:
     /*! @brief Unsigned integer type. */
